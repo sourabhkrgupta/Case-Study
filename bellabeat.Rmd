@@ -1,0 +1,93 @@
+---
+title: "Bellabeat Case study"
+author: "Sourabh Kumar"
+date: "11/15/2021"
+output: html_document
+---
+
+##Setting up my environment
+```{r loading packages, echo=TRUE}
+library(tidyverse)
+library(readr)
+library(lubridate)
+library(dplyr)
+library(skimr)
+```
+
+## Load the csv files
+```{r}
+dailyActivity_merged <- read_csv("C:/Users/subha/Desktop/Fitabase Data 4.12.16-5.12.16/dailyActivity_merged.csv")
+```
+```{r}
+sleepDay_merged <- read_csv("C:/Users/subha/Desktop/Fitabase Data 4.12.16-5.12.16/sleepDay_merged.csv")
+```
+##Changed the file name for better readability
+```{r}
+activity <- dailyActivity_merged
+sleep1 <- sleepDay_merged
+```
+##Data Summary of Both Table
+```{r check datasets}
+skim_without_charts(activity)
+skim_without_charts(sleep)
+```
+After exploring the data sets, I have noticed that there are some problems with the timestamp data.
+I will use the lubridate library's mdy() function to convert date strings as the date elements in daily_activity data are ordered as month, day and year.
+```{r}
+activity <- activity %>% mutate(ActivityDate = mdy(ActivityDate))
+```
+```{r}
+sleep <-
+  sleep %>% 
+  mutate(SleepDay = mdy(SleepDay))
+
+```
+##Re-check the Data
+```{r}
+head(activity)
+head(sleep)
+```
+##I will rename both 'ActivityDate' and 'SleepDay' column to 'Date'
+```{r}
+activity <- 
+  activity %>%
+  rename(Date = ActivityDate)
+
+sleep <- 
+  sleep %>% 
+  rename(Date = SleepDay)
+```
+#from here let`s summarize data
+#I will use n_distinct() function to find out the number of respondents in each dataset.
+```{r}
+n_distinct(activity$Id)
+n_distinct(sleep$Id)
+```
+There are 33 participants in the daily_activity dataset, and only 24 in the sleep-day dataset. This shows that not all users have sleep data.
+##Summary Statistics of daily_activity Data:
+```{r echo=TRUE}
+activity %>% 
+  select(TotalSteps,
+         TotalDistance,
+         SedentaryMinutes, 
+         Calories) %>% 
+  summary()
+```
+Based on the summary, I have discovered that the average total steps of the respondents is 7638 per day, the average total distance is 5.490, and the average sedentary time is 991 minutes (16 hours).
+The goal of 10,000 steps is the recommended daily step target for healthy adults to achieve health benefits.
+##Summary Statistics of sleep_day Data:
+```{r echo=TRUE}
+sleep %>% 
+  select(TotalSleepRecords,
+         TotalMinutesAsleep,
+         TotalTimeInBed) %>% 
+  summary()
+```
+From this summary, the average time asleep of the respondents is 419.5 minutes (7 hours).
+National Sleep Foundation guidelines advise that healthy adults need between 7 and 9 hours of sleep per night.
+##Merged both data
+```{r}
+combined_data <- inner_join(activity, sleep, by = c("Id", "Date"))
+n_distinct(combined_data$Id)
+```
+Now that I have merged the two datasets, there will only be 24 respondents.
